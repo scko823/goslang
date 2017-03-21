@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>GoSlang</title>
+  </head>
+  <body>
+    {{if .Messages}}
+      <div class="message">
+        <ul>
+          {{range .Messages}}
+          <li>{{.}}</li>
+          {{end}}
+        </ul>
+      </div>
+    {{end}}
+    <div class="send-message">
+      <form class="message" action="/messages" method="post">
+        <input type="text" name="newMessage" value="" />
+      </form>
+    </div>
+  </body>
+</html>
