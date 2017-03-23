@@ -15,9 +15,28 @@
       </div>
     {{end}}
     <div class="send-message">
-      <form class="message" action="/messages" method="post">
-        <input type="text" name="newMessage" value="" />
+      <form id="sumbit" class="message">
+        <input id="new-message" type="text" value="" />
       </form>
     </div>
   </body>
+  <script>
+    let conn
+    window.onload = function(){
+      document.getElementById('sumbit').onsubmit = function(evt){
+        if (!conn){
+          return false
+        }
+        conn.send(JSON.stringify(document.getElementById('new-message').value))
+        document.getElementById('new-message').value = ""
+        return false;
+      }
+      if (window["WebSocket"]) {
+        conn = new WebSocket("ws://" + document.location.host + "/ws")
+        conn.onmessage = function(evt){
+          alert('getting message'+ JSON.stringify(evt.data))
+        }
+      }
+    }
+  </script>
 </html>

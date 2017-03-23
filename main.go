@@ -5,13 +5,20 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/websocket"
 )
 
 var mockMessages []string
 var counter = 3
 var tmpl *template.Template
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
 
 func init() {
 	var err error
@@ -25,7 +32,32 @@ func init() {
 func main() {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/messages", messages)
-	http.ListenAndServe(":8080", nil)
+	http.HandleFunc("/ws", wsHandle)
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Fatalf("an error occured when trying to start the server, %v\n", err)
+	}
+}
+
+func wsHandle(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Println("There is an error attempting to promote to websocket")
+		fmt.Printf("err is: %v\n", err)
+		return
+	}
+	for {
+		var p string
+		var err error
+		err = conn.ReadJSON(&p)
+		if err != nil {
+			return
+		}
+		err = conn.WriteJSON(p)
+		if err != nil {
+			return
+		}
+	}
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
