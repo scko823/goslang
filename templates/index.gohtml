@@ -3,11 +3,16 @@
   <head>
     <meta charset="utf-8">
     <title>GoSlang</title>
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.min.js"
+      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous">
+    </script>
   </head>
   <body>
     {{if .Messages}}
       <div class="message">
-        <ul>
+        <ul id="message-list">
           {{range .Messages}}
           <li>{{.}}</li>
           {{end}}
@@ -34,7 +39,9 @@
       if (window["WebSocket"]) {
         conn = new WebSocket("ws://" + document.location.host + "/ws")
         conn.onmessage = function(evt){
-          alert('getting message'+ JSON.stringify(evt.data))
+          const message = JSON.parse(evt.data)
+          const $message = $('<li>').text(message);
+          $("#message-list").prepend($message)
         }
       }
     }
