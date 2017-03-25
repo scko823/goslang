@@ -32,14 +32,14 @@
         if (!conn){
           return false
         }
-        conn.send(JSON.stringify(document.getElementById('new-message').value))
+        conn.send(document.getElementById('new-message').value)
         document.getElementById('new-message').value = ""
         return false;
       }
       if (window["WebSocket"]) {
         conn = new WebSocket("ws://" + document.location.host + "/ws")
         conn.onmessage = function(evt){
-          const message = JSON.parse(evt.data)
+          const message = evt.data;
           const $message = $('<li>').text(message);
           $("#message-list").prepend($message)
         }

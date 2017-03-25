@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -11,21 +11,20 @@ import (
 func wsHandle(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Println("There is an error attempting to promote to websocket")
-		fmt.Printf("err is: %v\n", err)
+		log.Println("There is an error attempting to promote to websocket")
+		log.Printf("err is: %v\n", err)
 		return
 	}
+	sockets = append(sockets, conn)
 	for {
-		var p string
-		var err error
-		err = conn.ReadJSON(&p)
+		_, p, err := conn.ReadMessage()
 		if err != nil {
+			log.Println(err)
 			return
 		}
-		err = conn.WriteJSON(p)
-		if err != nil {
-			return
-		}
+		log.Println(string(p))
+		dumpCh <- p
+		log.Println("messages.go line 28")
 	}
 }
 
@@ -33,8 +32,8 @@ func messages(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		marshalledMsg, err := json.Marshal(mockMessages)
 		if err != nil {
-			fmt.Println("an error occur during JSON marshal process")
-			fmt.Println(err)
+			log.Println("an error occur during JSON marshal process")
+			log.Println(err)
 		}
 		io.WriteString(w, string(marshalledMsg))
 		return
@@ -42,19 +41,19 @@ func messages(w http.ResponseWriter, r *http.Request) {
 		newMsgByte := []byte{}
 		_, err := r.Body.Read(newMsgByte)
 		if err != nil {
-			fmt.Println("an error occur when reading request Body")
-			fmt.Printf("The request body is\n")
-			fmt.Printf("%v", r.Body)
-			fmt.Printf("The error is\n")
-			fmt.Println(err)
+			log.Println("an error occur when reading request Body")
+			log.Printf("The request body is\n")
+			log.Printf("%v", r.Body)
+			log.Printf("The error is\n")
+			log.Println(err)
 		}
 		mockMessages = append(mockMessages, "message"+strconv.Itoa(counter))
 		counter++
 		marshalledMsg, _ := json.Marshal(mockMessages)
 		if err != nil {
 			counter--
-			fmt.Println("an error occur during JSON marshal process")
-			fmt.Println(err)
+			log.Println("an error occur during JSON marshal process")
+			log.Println(err)
 		}
 		io.WriteString(w, string(marshalledMsg))
 		return
