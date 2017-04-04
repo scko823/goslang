@@ -17,9 +17,11 @@ var upgrader = websocket.Upgrader{
 }
 var sockets []*websocket.Conn
 var dumpCh chan []byte
+var unregister chan *websocket.Conn
 
 func init() {
 	dumpCh = make(chan []byte)
+	unregister = make(chan *websocket.Conn)
 	var err error
 	mockMessages = []string{"message1", "message2"}
 	tmpl, err = template.ParseGlob("templates/*")
@@ -34,12 +36,24 @@ func main() {
 		log.Print("running go routine to firehose all sockets")
 		var byteMessage []byte
 		for {
-			byteMessage = <-dumpCh
-			log.Println("Got new message")
-			log.Println(string(byteMessage))
-			for _, socket := range sockets {
-				socket.WriteMessage(websocket.TextMessage, byteMessage)
+			select {
+			case byteMessage = <-dumpCh:
+				log.Println("Got new message")
+				log.Println(string(byteMessage))
+				log.Printf("Len of sockets: %v \n", len(sockets))
+				for _, socket := range sockets {
+					socket.WriteMessage(websocket.TextMessage, byteMessage)
+				}
+			case leftConn := <-unregister:
+				for i, socket := range sockets {
+					if socket == leftConn {
+						sockets = append(sockets[:i], sockets[i+1:]...)
+						log.Printf("a socket is leaving...\nnew len of sockets: %v", len(sockets))
+						break
+					}
+				}
 			}
+
 		}
 	}()
 	http.HandleFunc("/", index)

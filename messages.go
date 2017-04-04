@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/websocket"
 )
 
 func wsHandle(w http.ResponseWriter, r *http.Request) {
@@ -16,6 +18,10 @@ func wsHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sockets = append(sockets, conn)
+	defer func(c *websocket.Conn) {
+		unregister <- c
+		c.Close()
+	}(conn)
 	for {
 		_, p, err := conn.ReadMessage()
 		if err != nil {
