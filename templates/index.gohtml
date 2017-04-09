@@ -10,15 +10,17 @@
     </script>
   </head>
   <body>
-    {{if .Messages}}
       <div class="message">
         <ul id="message-list">
-          {{range .Messages}}
-          <li>{{.}}</li>
+          {{if .Messages}}
+            {{range .Messages}}
+              <li>{{.}}</li>
+            {{end}}
+          {{else}}
+            <li></li>
           {{end}}
         </ul>
       </div>
-    {{end}}
     <div class="send-message">
       <form id="sumbit" class="message">
         <input id="new-message" type="text" value="" />

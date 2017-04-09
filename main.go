@@ -8,8 +8,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var mockMessages []string
-var counter = 3
 var tmpl *template.Template
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -23,7 +21,6 @@ func init() {
 	dumpCh = make(chan []byte)
 	unregister = make(chan *websocket.Conn)
 	var err error
-	mockMessages = []string{"message1", "message2"}
 	tmpl, err = template.ParseGlob("templates/*")
 	if err != nil {
 		log.Fatalf("there is an error when trying to parse templates. Err: %v\n", err)
@@ -57,7 +54,6 @@ func main() {
 		}
 	}()
 	http.HandleFunc("/", index)
-	http.HandleFunc("/messages", messages)
 	http.HandleFunc("/ws", wsHandle)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
@@ -66,10 +62,6 @@ func main() {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-	tmpl.ExecuteTemplate(w, "index.gohtml", struct {
-		Messages []string
-	}{
-		mockMessages,
-	})
+	tmpl.ExecuteTemplate(w, "index.gohtml", nil)
 	return
 }
