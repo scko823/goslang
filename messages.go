@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -25,8 +26,9 @@ func wsHandle(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		log.Println(string(p))
-		dumpCh <- p
+		newMsg := new(message)
+		json.Unmarshal(p, newMsg)
+		dumpCh <- *newMsg
 		log.Println("messages.go line 28")
 	}
 }

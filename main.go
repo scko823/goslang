@@ -14,11 +14,19 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 var sockets []*websocket.Conn
-var dumpCh chan []byte
 var unregister chan *websocket.Conn
 
+type message struct {
+	MessageText string `json:"message"`
+	Room        string `json:"room"`
+	Timestamp   int64  `json:"time"`
+}
+
+var messages = []message{}
+var dumpCh chan message
+
 func init() {
-	dumpCh = make(chan []byte)
+	dumpCh = make(chan message)
 	unregister = make(chan *websocket.Conn)
 	var err error
 	tmpl, err = template.ParseGlob("templates/*")
@@ -31,15 +39,14 @@ func init() {
 func main() {
 	go func() {
 		log.Print("running go routine to firehose all sockets")
-		var byteMessage []byte
+		var newMsg message
 		for {
 			select {
-			case byteMessage = <-dumpCh:
-				log.Println("Got new message")
-				log.Println(string(byteMessage))
+			case newMsg = <-dumpCh:
+				log.Println("Got new message:")
 				log.Printf("Len of sockets: %v \n", len(sockets))
 				for _, socket := range sockets {
-					socket.WriteMessage(websocket.TextMessage, byteMessage)
+					socket.WriteJSON(newMsg)
 				}
 			case leftConn := <-unregister:
 				for i, socket := range sockets {
