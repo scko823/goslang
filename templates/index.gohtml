@@ -29,20 +29,31 @@
   </body>
   <script>
     let conn
+    const messageFactor = (msg, room) => ({
+      message: msg,
+      room: room,
+      time: Math.trunc(new Date().getTime()/1000)
+    })
     window.onload = function(){
       document.getElementById('sumbit').onsubmit = function(evt){
+        evt.preventDefault()
+        const messageText = document.getElementById('new-message').value
+        if (!messageText) {
+          return false
+        }
         if (!conn){
           return false
         }
-        conn.send(document.getElementById('new-message').value)
+        const msg = messageFactor(messageText, "main")
+        conn.send(JSON.stringify(msg))
         document.getElementById('new-message').value = ""
-        return false;
+        return false
       }
       if (window["WebSocket"]) {
         conn = new WebSocket("ws://" + document.location.host + "/ws")
         conn.onmessage = function(evt){
-          const message = evt.data;
-          const $message = $('<li>').text(message);
+          let message = JSON.parse(event.data)
+          const $message = $('<li>').text(message.message)
           $("#message-list").prepend($message)
         }
       }
