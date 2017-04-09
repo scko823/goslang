@@ -60,6 +60,7 @@ func main() {
 
 		}
 	}()
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("assets"))))
 	http.HandleFunc("/", index)
 	http.HandleFunc("/ws", wsHandle)
 	err := http.ListenAndServe(":8080", nil)
