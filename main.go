@@ -22,18 +22,21 @@ type message struct {
 	Timestamp   int64  `json:"time"`
 }
 
-var messages = []message{}
 var dumpCh chan message
+var messages = []message{}
+var rooms map[string]room
 
 func init() {
-	dumpCh = make(chan message)
-	unregister = make(chan *websocket.Conn)
+	mainHub := hubCtrl()
+	dumpCh = mainHub.dumpCh
+	unregister = mainHub.unregister
+	rooms := mainHub.rooms
+	rooms["main"] = roomCtrl("main")
 	var err error
 	tmpl, err = template.ParseGlob("templates/*")
 	if err != nil {
 		log.Fatalf("there is an error when trying to parse templates. Err: %v\n", err)
 	}
-
 }
 
 func main() {
@@ -44,6 +47,7 @@ func main() {
 			select {
 			case newMsg = <-dumpCh:
 				log.Println("Got new message:")
+				log.Printf("message is for room: %s\n", newMsg.Room)
 				log.Printf("Len of sockets: %v \n", len(sockets))
 				for _, socket := range sockets {
 					socket.WriteJSON(newMsg)
