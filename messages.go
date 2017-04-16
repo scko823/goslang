@@ -32,7 +32,7 @@ func wsHandle(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("newly created room: %v\n", roomName)
 	}
 	defer func(c *websocket.Conn) {
-		unregister <- c
+		rooms[roomName].unregister <- c
 		c.Close()
 	}(conn)
 	for {
