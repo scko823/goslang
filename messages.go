@@ -43,7 +43,7 @@ func wsHandle(w http.ResponseWriter, r *http.Request) {
 		}
 		newMsg := new(message)
 		json.Unmarshal(p, newMsg)
-		dumpCh <- *newMsg
-		log.Println("messages.go line 28")
+		rooms[roomName].messageCh <- *newMsg
+		log.Println("messages.go line 47")
 	}
 }

@@ -43,27 +43,12 @@ func init() {
 func main() {
 	go func() {
 		log.Print("running go routine to firehose all sockets")
-		var newMsg message
+		// var newMsg message
 		for {
 			select {
-			case newMsg = <-dumpCh:
-				log.Println("Got new message:")
-				log.Printf("message is for room:%s\n", newMsg.Room)
-				roomName := newMsg.Room
-				log.Printf("Len of sockets: %v \n", len(rooms[roomName].sockets))
-				for _, socket := range rooms[roomName].sockets {
-					socket.WriteJSON(newMsg)
-				}
-			case leftConn := <-unregister:
-				for i, socket := range sockets {
-					if socket == leftConn {
-						sockets = append(sockets[:i], sockets[i+1:]...)
-						log.Printf("a socket is leaving...\nnew len of sockets: %v", len(sockets))
-						break
-					}
-				}
-			}
+			case _ = <-dumpCh:
 
+			}
 		}
 	}()
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("assets"))))

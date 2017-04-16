@@ -34,15 +34,24 @@ func roomCtrl(s string) *roomModel {
 	}
 	go func() {
 		for {
-			leftConn := <-unregister
-			for i, socket := range newRoom.sockets {
-				if socket == leftConn {
-					sockets := append(newRoom.sockets[:i], newRoom.sockets[i+1:]...)
-					log.Printf("a socket is leaving...\nnew len of sockets: %v", len(sockets))
-					newRoom.sockets = sockets
-					break
+			select {
+			case newMsg := <-msgCh:
+				log.Printf("message is for room:%s\n", s)
+				log.Printf("Len of sockets: %v \n", len(newRoom.sockets))
+				for _, socket := range newRoom.sockets {
+					socket.WriteJSON(newMsg)
+				}
+			case leftConn := <-unregister:
+				for i, socket := range newRoom.sockets {
+					if socket == leftConn {
+						sockets := append(newRoom.sockets[:i], newRoom.sockets[i+1:]...)
+						log.Printf("a socket is leaving...\nnew len of sockets: %v", len(sockets))
+						newRoom.sockets = sockets
+						break
+					}
 				}
 			}
+
 		}
 	}()
 	return &newRoom
