@@ -24,13 +24,14 @@ type message struct {
 
 var dumpCh chan message
 var messages = []message{}
-var rooms map[string]room
+var rooms map[string]*roomModel
+var mainHub hub
 
 func init() {
-	mainHub := hubCtrl()
+	mainHub = hubCtrl()
 	dumpCh = mainHub.dumpCh
 	unregister = mainHub.unregister
-	rooms := mainHub.rooms
+	rooms = mainHub.rooms
 	rooms["main"] = roomCtrl("main")
 	var err error
 	tmpl, err = template.ParseGlob("templates/*")
@@ -47,9 +48,10 @@ func main() {
 			select {
 			case newMsg = <-dumpCh:
 				log.Println("Got new message:")
-				log.Printf("message is for room: %s\n", newMsg.Room)
-				log.Printf("Len of sockets: %v \n", len(sockets))
-				for _, socket := range sockets {
+				log.Printf("message is for room:%s\n", newMsg.Room)
+				roomName := newMsg.Room
+				log.Printf("Len of sockets: %v \n", len(rooms[roomName].sockets))
+				for _, socket := range rooms[roomName].sockets {
 					socket.WriteJSON(newMsg)
 				}
 			case leftConn := <-unregister:

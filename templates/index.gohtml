@@ -59,7 +59,7 @@
         return false
       }
       if (window["WebSocket"]) {
-        conn = new WebSocket("ws://" + document.location.host + "/ws")
+        conn = new WebSocket("ws://" + document.location.host + "/ws?room=" + (getParameterByName('room')||'main') )
         conn.onmessage = function(evt){
           let message = JSON.parse(event.data)
           const $message = $('<li>').text(message.message)

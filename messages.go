@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 
 	"github.com/gorilla/websocket"
 )
@@ -15,7 +17,20 @@ func wsHandle(w http.ResponseWriter, r *http.Request) {
 		log.Printf("err is: %v\n", err)
 		return
 	}
-	sockets = append(sockets, conn)
+	queries, _ := url.ParseQuery(r.URL.RawQuery)
+	roomName := queries["room"][0]
+	log.Printf("there is a new socket joining %v, \n", roomName)
+	if room, ok := mainHub.rooms[roomName]; ok {
+		newSockets := append(room.sockets, conn)
+		room.sockets = newSockets
+		fmt.Printf("len of rooms socket after: %v\n", len(room.sockets))
+	} else {
+		newRoom := roomCtrl(roomName)
+		newSocketSlice := append(newRoom.sockets, conn)
+		newRoom.sockets = newSocketSlice
+		rooms[roomName] = newRoom
+		fmt.Printf("newly created room: %v\n", roomName)
+	}
 	defer func(c *websocket.Conn) {
 		unregister <- c
 		c.Close()

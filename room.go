@@ -11,16 +11,16 @@ sockets []*websocket.Conn
 
 */
 
-type room struct {
+type roomModel struct {
 	name      string
 	messageCh chan message
 	sockets   []*websocket.Conn
 }
 
-func roomCtrl(s string) room {
-	var sockets []*websocket.Conn
+func roomCtrl(s string) *roomModel {
+	sockets := []*websocket.Conn{}
 	msgCh := make(chan message)
-	return room{
+	return &roomModel{
 		name:      s,
 		messageCh: msgCh,
 		sockets:   sockets,
