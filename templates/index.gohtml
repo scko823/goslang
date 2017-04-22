@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>GoSlang</title>
     <script src="/public/vendor/jquery-3.2.0.min.js"></script>
+    <script src="https://unpkg.com/vue"></script>
     <script>
     function getParameterByName(name, url) {
       if (!url) {
@@ -16,6 +17,7 @@
       if (!results[2]) return '';
       return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
+    let conn
     </script>
   </head>
   <body>
@@ -30,34 +32,20 @@
           {{end}}
         </ul>
       </div>
-    <div class="send-message">
-      <form id="sumbit" class="message">
-        <input id="new-message" type="text" value="" />
+    <div id="send-message">
+      <form id="sumbit" class="message" @submit.prevent="submitNewMessage">
+        <input v-model="newMessageText" />
       </form>
     </div>
   </body>
+  <script src="/public/js/chat.js"></script>
   <script>
-    let conn
     const messageFactor = (msg) => ({
       message: msg,
       room: getParameterByName('room')||'main',
       time: Math.trunc(new Date().getTime()/1000)
     })
     window.onload = function(){
-      document.getElementById('sumbit').onsubmit = function(evt){
-        evt.preventDefault()
-        const messageText = document.getElementById('new-message').value
-        if (!messageText) {
-          return false
-        }
-        if (!conn){
-          return false
-        }
-        const msg = messageFactor(messageText)
-        conn.send(JSON.stringify(msg))
-        document.getElementById('new-message').value = ""
-        return false
-      }
       if (window["WebSocket"]) {
         conn = new WebSocket("ws://" + document.location.host + "/ws?room=" + (getParameterByName('room')||'main') )
         conn.onmessage = function(evt){
