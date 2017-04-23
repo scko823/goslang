@@ -19,41 +19,19 @@
     }
     let conn
     </script>
-  </head>
-  <body>
-      <div class="message">
-        <ul id="message-list">
-          {{if .Messages}}
-            {{range .Messages}}
-              <li>{{.}}</li>
-            {{end}}
-          {{else}}
-            <li></li>
-          {{end}}
-        </ul>
-      </div>
-    <div id="send-message">
-      <form id="sumbit" class="message" @submit.prevent="submitNewMessage">
-        <input v-model="newMessageText" />
-      </form>
-    </div>
-  </body>
-  <script src="/public/js/chat.js"></script>
-  <script>
+    <script>
     const messageFactor = (msg) => ({
       message: msg,
       room: getParameterByName('room')||'main',
       time: Math.trunc(new Date().getTime()/1000)
     })
-    window.onload = function(){
-      if (window["WebSocket"]) {
-        conn = new WebSocket("ws://" + document.location.host + "/ws?room=" + (getParameterByName('room')||'main') )
-        conn.onmessage = function(evt){
-          let message = JSON.parse(event.data)
-          const $message = $('<li>').text(message.message)
-          $("#message-list").prepend($message)
-        }
-      }
-    }
-  </script>
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <message-list></message-list>
+      <send-message></send-message>
+    </div>
+  </body>
+  <script src="/public/js/chat.js"></script>
 </html>
