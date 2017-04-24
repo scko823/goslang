@@ -28,6 +28,7 @@ var rooms map[string]*roomModel
 var mainHub hub
 
 func init() {
+	makeRedisConn()
 	mainHub = hubCtrl()
 	dumpCh = mainHub.dumpCh
 	unregister = mainHub.unregister
