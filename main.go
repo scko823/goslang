@@ -1,14 +1,12 @@
 package main
 
 import (
-	"html/template"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
 )
 
-var tmpl *template.Template
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -28,17 +26,12 @@ var rooms map[string]*roomModel
 var mainHub hub
 
 func init() {
-	makeRedisConn()
+	// makeRedisConn()
 	mainHub = hubCtrl()
 	dumpCh = mainHub.dumpCh
 	unregister = mainHub.unregister
 	rooms = mainHub.rooms
 	rooms["main"] = roomCtrl("main")
-	var err error
-	tmpl, err = template.ParseGlob("templates/*")
-	if err != nil {
-		log.Fatalf("there is an error when trying to parse templates. Err: %v\n", err)
-	}
 }
 
 func main() {
@@ -53,7 +46,9 @@ func main() {
 		}
 	}()
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("assets"))))
-	http.HandleFunc("/", index)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "assets/index.html")
+	})
 	http.HandleFunc("/ws", wsHandle)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
@@ -61,7 +56,7 @@ func main() {
 	}
 }
 
-func index(w http.ResponseWriter, r *http.Request) {
-	tmpl.ExecuteTemplate(w, "index.gohtml", nil)
-	return
-}
+// func index(w http.ResponseWriter, r *http.Request) {
+// 	tmpl.ExecuteTemplate(w, "index.html", nil)
+// 	return
+// }
