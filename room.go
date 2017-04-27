@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/gorilla/websocket"
 )
@@ -55,4 +58,32 @@ func roomCtrl(s string) *roomModel {
 		}
 	}()
 	return &newRoom
+}
+
+type roomEvent struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
+}
+
+func roomListener(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println("There is an error attempting to promote to websocket on /rooms-channel")
+		log.Printf("err is: %v\n", err)
+		return
+	}
+	allSockets = append(allSockets, conn)
+	for {
+		_, p, err := conn.ReadMessage()
+		if err != nil {
+			log.Println("There is an error attempting to read message on websocket on /rooms-channel")
+			log.Printf("err is: %v\n", err)
+			break
+		}
+		fmt.Println("get new roomEvent")
+		fmt.Printf("%s\n", string(p))
+		newRoomEvent := new(roomEvent)
+		json.Unmarshal(p, newRoomEvent)
+		roomChannel <- *newRoomEvent
+	}
 }
