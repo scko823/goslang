@@ -1,19 +1,26 @@
 package main
 
 import (
-	"html/template"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
 )
 
-var tmpl *template.Template
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		// r.URL
+		// fmt.Printf("r.URL.Host is %s\n", r.URL.Host)
+		// return strings.HasSuffix(r.URL.Host, "8081")
+		return true
+	},
 }
-var sockets []*websocket.Conn
+
+// this is the array that contain all of the ws
+// right now just using this to firehose all ws for new room created
+var allSockets []*websocket.Conn
 var unregister chan *websocket.Conn
 
 type message struct {
@@ -26,19 +33,16 @@ var dumpCh chan message
 var messages = []message{}
 var rooms map[string]*roomModel
 var mainHub hub
+var roomChannel chan roomEvent
 
 func init() {
-	makeRedisConn()
+	// makeRedisConn()
 	mainHub = hubCtrl()
 	dumpCh = mainHub.dumpCh
 	unregister = mainHub.unregister
+	roomChannel = make(chan roomEvent)
 	rooms = mainHub.rooms
 	rooms["main"] = roomCtrl("main")
-	var err error
-	tmpl, err = template.ParseGlob("templates/*")
-	if err != nil {
-		log.Fatalf("there is an error when trying to parse templates. Err: %v\n", err)
-	}
 }
 
 func main() {
@@ -47,21 +51,27 @@ func main() {
 		// var newMsg message
 		for {
 			select {
-			case _ = <-dumpCh:
-
+			case newRoomEvent := <-roomChannel:
+				for _, sockets := range allSockets {
+					sockets.WriteJSON(newRoomEvent)
+				}
 			}
 		}
 	}()
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("assets"))))
-	http.HandleFunc("/", index)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "assets/index.html")
+	})
+	http.HandleFunc("/ws/rooms-listener", roomListener)
 	http.HandleFunc("/ws", wsHandle)
+
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatalf("an error occured when trying to start the server, %v\n", err)
 	}
 }
 
-func index(w http.ResponseWriter, r *http.Request) {
-	tmpl.ExecuteTemplate(w, "index.gohtml", nil)
-	return
-}
+// func index(w http.ResponseWriter, r *http.Request) {
+// 	tmpl.ExecuteTemplate(w, "index.html", nil)
+// 	return
+// }
