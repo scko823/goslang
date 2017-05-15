@@ -10,6 +10,12 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		// r.URL
+		// fmt.Printf("r.URL.Host is %s\n", r.URL.Host)
+		// return strings.HasSuffix(r.URL.Host, "8081")
+		return true
+	},
 }
 
 // this is the array that contain all of the ws
