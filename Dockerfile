@@ -10,10 +10,6 @@ RUN go get github.com/gorilla/websocket
 
 RUN go get github.com/go-redis/redis
 
-RUN mkdir assets/
-
-COPY assets/vendor/ /app/assets/vendor/
-
 VOLUME /app/assets
 
 EXPOSE 8080
