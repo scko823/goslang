@@ -1,3 +1,5 @@
+FROM scko823/goslang-ui:latest
+
 FROM golang
 
 WORKDIR /app
@@ -10,7 +12,7 @@ RUN go get github.com/gorilla/websocket
 
 RUN go get github.com/go-redis/redis
 
-VOLUME /app/assets
+COPY --from=0 /usr/src/app/assets/ assets/
 
 EXPOSE 8080
 
