@@ -1,0 +1,10 @@
+FROM scko823/goslang-ui:latest
+FROM scratch
+# main is built with: CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+
+ADD main /
+COPY --from=0 /usr/src/app/assets/ assets/
+
+EXPOSE 8080
+
+CMD ["/main"]
